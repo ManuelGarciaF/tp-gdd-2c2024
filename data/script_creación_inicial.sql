@@ -115,12 +115,12 @@ CREATE TABLE Pagos (
 );
 CREATE TABLE TiposMedioDePago (
     tmdp_codigo DECIMAL(18) PRIMARY KEY,
-    tmdp_descripcion NVARHCAR(50) NOT NULL
+    tmdp_descripcion NVARCHAR(50) NOT NULL
 );
 CREATE TABLE MediosDePago (
     mpag_codigo DECIMAL(18) PRIMARY KEY,
     mpag_tipo DECIMAL(18), -- FK
-    mpag_descripcion NVARHCAR(50) NOT NULL
+    mpag_descripcion NVARCHAR(50) NOT NULL
 );
 
 CREATE TABLE Vendedores (
@@ -154,12 +154,12 @@ CREATE TABLE Domicilios (
     domi_nro_calle DECIMAL(18) NOT NULL,
     domi_piso DECIMAL(18),
     domi_depto NVARCHAR(50),
-    domi_cp NVARCHAR(50) NOT_NULL
+    domi_cp NVARCHAR(50) NOT NULL
 );
 
 CREATE TABLE TiposEnvio (
     tden_codigo DECIMAL(18) PRIMARY KEY,
-    tden_descripcion NVARHCAR(50) NOT NULL
+    tden_descripcion NVARCHAR(50) NOT NULL
 );
 CREATE TABLE Envios (
     envi_codigo DECIMAL(18) PRIMARY KEY,
