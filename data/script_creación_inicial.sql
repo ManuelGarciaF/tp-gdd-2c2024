@@ -6,13 +6,12 @@ CREATE SCHEMA GROUP_BY_PROMOCION;
 GO
 
 -- Crear Tablas
-
 CREATE TABLE GROUP_BY_PROMOCION.TiposDetalleFactura (
-    tdfa_codigo DECIMAL(18) PRIMARY KEY,
+    tdfa_codigo DECIMAL(18) IDENTITY(1, 1) PRIMARY KEY,
     tdfa_descripcion NVARCHAR(50) NOT NULL
 );
 CREATE TABLE GROUP_BY_PROMOCION.DetallesFactura (
-    dfac_codigo DECIMAL(18) PRIMARY KEY,
+    dfac_codigo DECIMAL(18) IDENTITY(1, 1) PRIMARY KEY,
     dfac_publicacion DECIMAL(18), -- FK
     dfac_factura DECIMAL(18), -- FK
     dfac_tipo DECIMAL(18), -- FK
@@ -28,15 +27,15 @@ CREATE TABLE GROUP_BY_PROMOCION.Facturas (
 );
 
 CREATE TABLE GROUP_BY_PROMOCION.Marcas (
-    marc_codigo DECIMAL(18) PRIMARY KEY,
+    marc_codigo DECIMAL(18) IDENTITY(1, 1) PRIMARY KEY,
     marc_descripcion NVARCHAR(50) NOT NULL
 );
 CREATE TABLE GROUP_BY_PROMOCION.Modelos (
-    mode_codigo DECIMAL(18) PRIMARY KEY,
+    mode_codigo DECIMAL(18) IDENTITY(1, 1) PRIMARY KEY,
     mode_descripcion NVARCHAR(50) NOT NULL
 );
 CREATE TABLE GROUP_BY_PROMOCION.Productos (
-    prod_codigo DECIMAL(18) PRIMARY KEY,
+    prod_codigo DECIMAL(18) PRIMARY KEY, -- TODO revisar, el codigo original es un nvarchar
     prod_sub_rubro DECIMAL(18), -- FK
     prod_marca DECIMAL(18), -- FK
     prod_modelo DECIMAL(18), -- FK
@@ -44,11 +43,11 @@ CREATE TABLE GROUP_BY_PROMOCION.Productos (
     prod_precio DECIMAL(18,2) NOT NULL
 );
 CREATE TABLE GROUP_BY_PROMOCION.Rubros (
-    rubr_codigo DECIMAL(18) PRIMARY KEY,
+    rubr_codigo DECIMAL(18) IDENTITY(1, 1) PRIMARY KEY,
     rubr_descripcion NVARCHAR(50) NOT NULL
 );
 CREATE TABLE GROUP_BY_PROMOCION.SubRubros (
-    subr_codigo DECIMAL(18) PRIMARY KEY,
+    subr_codigo DECIMAL(18) IDENTITY(1, 1) PRIMARY KEY,
     subr_rubro DECIMAL(18), -- FK
     subr_descripcion NVARCHAR(50) NOT NULL
 );
@@ -68,12 +67,12 @@ CREATE TABLE GROUP_BY_PROMOCION.Publicaciones (
 );
 
 CREATE TABLE GROUP_BY_PROMOCION.Localidades (
-    loca_codigo DECIMAL(18) PRIMARY KEY,
+    loca_codigo DECIMAL(18) IDENTITY(1, 1) PRIMARY KEY,
     loca_provincia DECIMAL(18), -- FK
     loca_descripcion NVARCHAR(50) NOT NULL
 );
 CREATE TABLE GROUP_BY_PROMOCION.Provincias (
-    prov_codigo DECIMAL(18) PRIMARY KEY,
+    prov_codigo DECIMAL(18) IDENTITY(1, 1) PRIMARY KEY,
     prov_descripcion NVARCHAR(50) NOT NULL
 );
 
@@ -109,29 +108,29 @@ CREATE TABLE GROUP_BY_PROMOCION.DetallesPago (
     dpag_cant_cuotas DECIMAL(18) NOT NULL
 );
 CREATE TABLE GROUP_BY_PROMOCION.Pagos (
-    pago_codigo DECIMAL(18) PRIMARY KEY,
+    pago_codigo DECIMAL(18) IDENTITY(1, 1) PRIMARY KEY,
     pago_medio_de_pago DECIMAL(18), -- FK
     pago_fecha DATE NOT NULL
 );
 CREATE TABLE GROUP_BY_PROMOCION.TiposMedioDePago (
-    tmdp_codigo DECIMAL(18) PRIMARY KEY,
+    tmdp_codigo DECIMAL(18) IDENTITY(1, 1) PRIMARY KEY,
     tmdp_descripcion NVARCHAR(50) NOT NULL
 );
 CREATE TABLE GROUP_BY_PROMOCION.MediosDePago (
-    mpag_codigo DECIMAL(18) PRIMARY KEY,
+    mpag_codigo DECIMAL(18) IDENTITY(1, 1) PRIMARY KEY,
     mpag_tipo DECIMAL(18), -- FK
     mpag_descripcion NVARCHAR(50) NOT NULL
 );
 
 CREATE TABLE GROUP_BY_PROMOCION.Vendedores (
-    vend_codigo DECIMAL(18) PRIMARY KEY,
+    vend_codigo DECIMAL(18) IDENTITY(1, 1) PRIMARY KEY,
     vend_usuario DECIMAL(18), -- FK
     vend_razon_social NVARCHAR(50) NOT NULL,
     vend_mail NVARCHAR(50) NOT NULL,
     vend_cuit DECIMAL(18) NOT NULL
 );
 CREATE TABLE GROUP_BY_PROMOCION.Clientes (
-    clie_codigo DECIMAL(18) PRIMARY KEY,
+    clie_codigo DECIMAL(18) IDENTITY(1, 1) PRIMARY KEY,
     clie_usuario DECIMAL(18), -- FK
     clie_nombre NVARCHAR(50) NOT NULL,
     clie_apellido NVARCHAR(50) NOT NULL,
@@ -140,14 +139,14 @@ CREATE TABLE GROUP_BY_PROMOCION.Clientes (
     clie_dni DECIMAL(18) NOT NULL
 );
 CREATE TABLE GROUP_BY_PROMOCION.Usuarios (
-    usua_codigo DECIMAL(18) PRIMARY KEY,
+    usua_codigo DECIMAL(18) IDENTITY(1, 1) PRIMARY KEY,
     usua_nombre NVARCHAR(50) NOT NULL,
     usua_contrasenia NVARCHAR(50) NOT NULL,
     usua_fecha_crea DATE NOT NULL
 );
 
 CREATE TABLE GROUP_BY_PROMOCION.Domicilios (
-    domi_codigo DECIMAL(18) PRIMARY KEY,
+    domi_codigo DECIMAL(18) IDENTITY(1, 1) PRIMARY KEY,
     domi_usuario DECIMAL(18), -- FK
     domi_localidad DECIMAL(18), -- FK
     domi_calle NVARCHAR(50) NOT NULL,
@@ -158,13 +157,14 @@ CREATE TABLE GROUP_BY_PROMOCION.Domicilios (
 );
 
 CREATE TABLE GROUP_BY_PROMOCION.TiposEnvio (
-    tden_codigo DECIMAL(18) PRIMARY KEY,
+    tden_codigo DECIMAL(18) IDENTITY(1, 1) PRIMARY KEY,
     tden_descripcion NVARCHAR(50) NOT NULL
 )
 CREATE TABLE GROUP_BY_PROMOCION.Envios (
-    envi_codigo DECIMAL(18) PRIMARY KEY,
+    envi_codigo DECIMAL(18) IDENTITY(1, 1) PRIMARY KEY,
     envi_venta DECIMAL(18), -- FK
     envi_tipo DECIMAL(18), -- FK
+    envi_domicilio DECIMAL(18), -- FK
     envi_fecha_programada DATE,
     envi_hora_inicio DECIMAL(18),
     envi_hora_fin DECIMAL(18),
@@ -230,7 +230,8 @@ ALTER TABLE GROUP_BY_PROMOCION.Domicilios
 
 ALTER TABLE GROUP_BY_PROMOCION.Envios
     ADD FOREIGN KEY(envi_venta) REFERENCES GROUP_BY_PROMOCION.Ventas(vent_codigo) ON DELETE SET NULL,
-        FOREIGN KEY(envi_tipo) REFERENCES GROUP_BY_PROMOCION.TiposEnvio(tden_codigo) ON DELETE SET NULL;
+        FOREIGN KEY(envi_tipo) REFERENCES GROUP_BY_PROMOCION.TiposEnvio(tden_codigo) ON DELETE SET NULL,
+        FOREIGN KEY(envi_domicilio) REFERENCES GROUP_BY_PROMOCION.Domicilios(domi_codigo) ON DELETE SET NULL;
 
 -- FIXME eliminar 
 /*
