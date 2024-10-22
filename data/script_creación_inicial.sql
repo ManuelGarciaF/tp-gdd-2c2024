@@ -5,7 +5,10 @@ GO
 CREATE SCHEMA GROUP_BY_PROMOCION;
 GO
 
--- Crear Tablas
+/*
+** Crear Tablas
+*/
+
 CREATE TABLE GROUP_BY_PROMOCION.TiposDetalleFactura (
     tdfa_codigo DECIMAL(18) IDENTITY(1, 1) PRIMARY KEY,
     tdfa_descripcion NVARCHAR(50) NOT NULL
@@ -31,7 +34,7 @@ CREATE TABLE GROUP_BY_PROMOCION.Marcas (
     marc_descripcion NVARCHAR(50) NOT NULL
 );
 CREATE TABLE GROUP_BY_PROMOCION.Modelos (
-    mode_codigo DECIMAL(18) IDENTITY(1, 1) PRIMARY KEY,
+    mode_codigo DECIMAL(18) PRIMARY KEY,
     mode_descripcion NVARCHAR(50) NOT NULL
 );
 CREATE TABLE GROUP_BY_PROMOCION.Productos (
@@ -232,6 +235,96 @@ ALTER TABLE GROUP_BY_PROMOCION.Envios
     ADD FOREIGN KEY(envi_venta) REFERENCES GROUP_BY_PROMOCION.Ventas(vent_codigo) ON DELETE SET NULL,
         FOREIGN KEY(envi_tipo) REFERENCES GROUP_BY_PROMOCION.TiposEnvio(tden_codigo) ON DELETE SET NULL,
         FOREIGN KEY(envi_domicilio) REFERENCES GROUP_BY_PROMOCION.Domicilios(domi_codigo) ON DELETE SET NULL;
+
+
+/*
+** Carga de datos
+*/
+
+/* Tablas simples (sin FKs) */
+
+INSERT INTO GROUP_BY_PROMOCION.TiposDetalleFactura (tdfa_descripcion)
+    SELECT DISTINCT FACTURA_DET_TIPO FROM gd_esquema.Maestra
+    WHERE FACTURA_DET_TIPO IS NOT NULL
+
+INSERT INTO GROUP_BY_PROMOCION.Marcas (marc_descripcion)
+    SELECT DISTINCT PRODUCTO_MARCA FROM gd_esquema.Maestra
+    WHERE PRODUCTO_MARCA IS NOT NULL
+
+INSERT INTO GROUP_BY_PROMOCION.Modelos (mode_codigo, mode_descripcion)
+    SELECT DISTINCT PRODUCTO_MOD_CODIGO, PRODUCTO_MOD_DESCRIPCION FROM gd_esquema.Maestra
+    WHERE PRODUCTO_MOD_CODIGO IS NOT NULL
+
+INSERT INTO GROUP_BY_PROMOCION.Rubros (rubr_descripcion)
+    SELECT DISTINCT PRODUCTO_RUBRO_DESCRIPCION FROM gd_esquema.Maestra
+    WHERE PRODUCTO_RUBRO_DESCRIPCION IS NOT NULL
+
+INSERT INTO GROUP_BY_PROMOCION.Provincias (prov_descripcion)
+    -- Todas las provincias, union evita repetidos
+    SELECT DISTINCT ALMACEN_PROVINCIA AS PROVINCIA FROM gd_esquema.Maestra
+    WHERE ALMACEN_PROVINCIA IS NOT NULL
+    UNION
+    SELECT DISTINCT CLI_USUARIO_DOMICILIO_PROVINCIA AS PROVINCIA FROM gd_esquema.Maestra
+    WHERE CLI_USUARIO_DOMICILIO_PROVINCIA IS NOT NULL
+    UNION
+    SELECT DISTINCT VEN_USUARIO_DOMICILIO_PROVINCIA AS PROVINCIA FROM gd_esquema.Maestra
+    WHERE VEN_USUARIO_DOMICILIO_PROVINCIA IS NOT NULL
+
+INSERT INTO GROUP_BY_PROMOCION.TiposMedioDePago (tmdp_descripcion)
+    SELECT DISTINCT PAGO_TIPO_MEDIO_PAGO FROM gd_esquema.Maestra
+    WHERE PAGO_TIPO_MEDIO_PAGO IS NOT NULL
+
+-- TODO Usuarios
+
+INSERT INTO GROUP_BY_PROMOCION.TiposEnvio (tden_descripcion)
+    SELECT DISTINCT ENVIO_TIPO FROM gd_esquema.Maestra
+    WHERE ENVIO_TIPO IS NOT NULL
+
+/* Tablas con FKs */
+
+-- TODO Facturas
+-- TODO DetallesFactura
+
+-- TODO Productos
+
+INSERT INTO GROUP_BY_PROMOCION.SubRubros (subr_rubro, subr_descripcion)
+    SELECT DISTINCT r.rubr_codigo, m.PRODUCTO_RUBRO_DESCRIPCION
+    FROM gd_esquema.Maestra m
+    JOIN GROUP_BY_PROMOCION.Rubros r ON r.rubr_descripcion = m.PRODUCTO_RUBRO_DESCRIPCION
+    WHERE m.PRODUCTO_RUBRO_DESCRIPCION IS NOT NULL
+
+INSERT INTO GROUP_BY_PROMOCION.Localidades (loca_provincia, loca_descripcion)
+    -- Todas las localidades, unidas con sus provincias
+    SELECT DISTINCT p.prov_codigo, m.ALMACEN_Localidad
+    FROM gd_esquema.Maestra m
+    JOIN GROUP_BY_PROMOCION.Provincias p on p.prov_descripcion = m.ALMACEN_PROVINCIA
+    UNION
+    SELECT DISTINCT p.prov_codigo, m.CLI_USUARIO_DOMICILIO_LOCALIDAD
+    FROM gd_esquema.Maestra m
+    JOIN GROUP_BY_PROMOCION.Provincias p on p.prov_descripcion = m.CLI_USUARIO_DOMICILIO_PROVINCIA
+    UNION
+    SELECT DISTINCT p.prov_codigo, m.VEN_USUARIO_DOMICILIO_LOCALIDAD
+    FROM gd_esquema.Maestra m
+    JOIN GROUP_BY_PROMOCION.Provincias p on p.prov_descripcion = m.VEN_USUARIO_DOMICILIO_PROVINCIA
+
+-- TODO Almacenes
+
+-- TODO MediosDePago
+-- TODO Pagos
+-- TODO DetallesPago
+
+-- TODO Vendedores
+-- TODO Clientes
+
+-- TODO Domicilios
+
+-- TODO Publicaciones
+
+-- TODO Ventas
+-- TODO DetallesVenta
+
+-- TODO Envios
+
 
 -- FIXME eliminar 
 /*
