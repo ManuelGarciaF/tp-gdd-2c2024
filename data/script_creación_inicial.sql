@@ -317,7 +317,24 @@ INSERT INTO GROUP_BY_PROMOCION.TiposMedioDePago (tmdp_descripcion)
     SELECT DISTINCT PAGO_TIPO_MEDIO_PAGO FROM gd_esquema.Maestra
     WHERE PAGO_TIPO_MEDIO_PAGO IS NOT NULL;
 
--- TODO Usuarios
+/* TODO Distintos clientes/vendedores comparten el mismo mail
+INSERT INTO GROUP_BY_PROMOCION.Usuarios (usua_nombre, usua_contrasenia, usua_mail, usua_fecha_crea)
+    SELECT DISTINCT
+        CLI_USUARIO_NOMBRE nombre,
+        CLI_USUARIO_PASS contrasenia,
+        CLIENTE_MAIL mail,
+        CLI_USUARIO_FECHA_CREACION fecha_crea
+    FROM gd_esquema.Maestra
+    WHERE CLI_USUARIO_NOMBRE IS NOT NULL
+    UNION
+    SELECT DISTINCT
+        VEN_USUARIO_NOMBRE nombre,
+        VEN_USUARIO_PASS contrasenia,
+        VENDEDOR_MAIL mail,
+        VEN_USUARIO_FECHA_CREACION fecha_crea
+    FROM gd_esquema.Maestra
+    WHERE VEN_USUARIO_NOMBRE IS NOT NULL
+*/
 
 INSERT INTO GROUP_BY_PROMOCION.TiposEnvio (tden_descripcion)
     SELECT DISTINCT ENVIO_TIPO FROM gd_esquema.Maestra
@@ -325,23 +342,13 @@ INSERT INTO GROUP_BY_PROMOCION.TiposEnvio (tden_descripcion)
 
 /* Tablas con FKs */
 
--- TODO Facturas
-/*INSERT INTO GROUP_BY_PROMOCION.Facturas (fact_usuario, fact_total, fact_fecha)
-    SELECT DISTINCT u.usua_codigo, m.FACTURA_TOTAL, m.FACTURA_FECHA
-    FROM gd_esquema.Maestra m
-    JOIN GROUP_BY_PROMOCION.usuario u ON 
-    WHERE m.FACTURA_NUMERO IS NOT NULL;
-*/
-
--- TODO DetallesFactura
-
 INSERT INTO GROUP_BY_PROMOCION.SubRubros (subr_rubro, subr_descripcion)
     SELECT DISTINCT r.rubr_codigo, m.PRODUCTO_SUB_RUBRO
     FROM gd_esquema.Maestra m
     JOIN GROUP_BY_PROMOCION.Rubros r ON r.rubr_descripcion = m.PRODUCTO_RUBRO_DESCRIPCION
     WHERE m.PRODUCTO_RUBRO_DESCRIPCION IS NOT NULL;
 
--- TODO Productos
+-- TODO Productos NO ES UNICO EL CODIGO VER RESPUESTA GRUPO
 /*
 INSERT INTO GROUP_BY_PROMOCION.Productos (prod_codigo, prod_sub_rubro, prod_marca, prod_modelo, prod_descripcion, prod_precio)
     SELECT DISTINCT m.PRODUCTO_CODIGO, s.subr_codigo, ma.marc_codigo, m.PRODUCTO_MOD_CODIGO, m.PRODUCTO_DESCRIPCION, m.PRODUCTO_PRECIO
@@ -376,11 +383,32 @@ INSERT INTO GROUP_BY_PROMOCION.Almacenes (alma_codigo, alma_localidad, alma_call
     WHERE m.ALMACEN_CODIGO IS NOT NULL;
 
 -- TODO Vendedores
+-- INSERT INTO GROUP_BY_PROMOCION.Vendedores (vend_usuario, vend_razon_social, vend_cuit)
+    SELECT DISTINCT u.usua_codigo, m.VENDEDOR_RAZON_SOCIAL, m.VENDEDOR_CUIT
+    FROM gd_esquema.Maestra m
+    JOIN GROUP_BY_PROMOCION.Usuarios u ON
+        u.usua_mail = m.VENDEDOR_MAIL AND
+        u.usua_nombre = m.VEN_USUARIO_NOMBRE AND
+        u.usua_contrasenia = m.VEN_USUARIO_PASS
+    WHERE m.VENDEDOR_RAZON_SOCIAL IS NOT NULL;
+
+
 -- TODO Clientes
 
 -- TODO Domicilios
 
 -- TODO Publicaciones
+
+-- TODO Facturas
+/*INSERT INTO GROUP_BY_PROMOCION.Facturas (fact_vendedor, fact_total, fact_fecha)
+    SELECT DISTINCT u.usua_codigo, m.FACTURA_TOTAL, m.FACTURA_FECHA
+    FROM gd_esquema.Maestra m
+    JOIN GROUP_BY_PROMOCION.usuario u ON 
+    WHERE m.FACTURA_NUMERO IS NOT NULL;
+*/
+
+-- TODO DetallesFactura
+
 
 -- TODO Ventas
 -- TODO DetallesVenta
