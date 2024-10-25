@@ -80,10 +80,11 @@ CREATE TABLE GROUP_BY_PROMOCION.Modelos (
     mode_descripcion NVARCHAR(50) NOT NULL UNIQUE
 );
 CREATE TABLE GROUP_BY_PROMOCION.Productos (
-    prod_codigo NVARCHAR(50) PRIMARY KEY,   -- TODO Terminar de chequear que esto este bien
+    prod_id DECIMAL(18) IDENTITY(1, 1) PRIMARY KEY,
     prod_sub_rubro DECIMAL(18), -- FK
     prod_marca DECIMAL(18), -- FK
     prod_modelo DECIMAL(18), -- FK
+    prod_codigo NVARCHAR(50),
     prod_descripcion NVARCHAR(50) NOT NULL,
     prod_precio DECIMAL(18,2) NOT NULL
 );
@@ -101,7 +102,7 @@ CREATE TABLE GROUP_BY_PROMOCION.Publicaciones (
     publ_codigo DECIMAL(18) PRIMARY KEY,
     publ_vendedor DECIMAL(18), -- FK
     publ_almacen DECIMAL(18), -- FK
-    publ_producto NVARCHAR(50), -- FK
+    publ_producto DECIMAL(18), -- FK
     publ_descripcion NVARCHAR(50) NOT NULL,
     publ_fecha_inicio DATE NOT NULL,
     publ_fecha_cierre DATE NOT NULL,
@@ -171,23 +172,24 @@ CREATE TABLE GROUP_BY_PROMOCION.MediosDePago (
 
 CREATE TABLE GROUP_BY_PROMOCION.Vendedores (
     vend_codigo DECIMAL(18) IDENTITY(1, 1) PRIMARY KEY,
-    vend_usuario DECIMAL(18) UNIQUE, -- FK
-    vend_razon_social NVARCHAR(50) NOT NULL UNIQUE,
-    vend_cuit DECIMAL(18) NOT NULL UNIQUE
+    vend_usuario DECIMAL(18), -- FK
+    vend_razon_social NVARCHAR(50) NOT NULL,
+    vend_mail NVARCHAR(50) NOT NULL,
+    vend_cuit NVARCHAR(50) NOT NULL
 );
 CREATE TABLE GROUP_BY_PROMOCION.Clientes (
     clie_codigo DECIMAL(18) IDENTITY(1, 1) PRIMARY KEY,
-    clie_usuario DECIMAL(18) UNIQUE, -- FK
+    clie_usuario DECIMAL(18), -- FK
     clie_nombre NVARCHAR(50) NOT NULL,
     clie_apellido NVARCHAR(50) NOT NULL,
     clie_fecha_nac DATE NOT NULL,
-    clie_dni DECIMAL(18) NOT NULL UNIQUE
+    clie_mail NVARCHAR(50) NOT NULL,
+    clie_dni DECIMAL(18) NOT NULL
 );
 CREATE TABLE GROUP_BY_PROMOCION.Usuarios (
     usua_codigo DECIMAL(18) IDENTITY(1, 1) PRIMARY KEY,
     usua_nombre NVARCHAR(50) NOT NULL,
     usua_contrasenia NVARCHAR(50) NOT NULL,
-    usua_mail NVARCHAR(50) NOT NULL UNIQUE,
     usua_fecha_crea DATE NOT NULL
 );
 
@@ -239,7 +241,7 @@ ALTER TABLE GROUP_BY_PROMOCION.SubRubros
 ALTER TABLE GROUP_BY_PROMOCION.Publicaciones
     ADD FOREIGN KEY(publ_vendedor) REFERENCES GROUP_BY_PROMOCION.Vendedores(vend_codigo) ON DELETE SET NULL,
         FOREIGN KEY(publ_almacen) REFERENCES GROUP_BY_PROMOCION.Almacenes(alma_codigo) ON DELETE SET NULL,
-        FOREIGN KEY(publ_producto) REFERENCES GROUP_BY_PROMOCION.Productos(prod_codigo) ON DELETE SET NULL;
+        FOREIGN KEY(publ_producto) REFERENCES GROUP_BY_PROMOCION.Productos(prod_id) ON DELETE SET NULL;
 
 ALTER TABLE GROUP_BY_PROMOCION.Localidades
     ADD FOREIGN KEY(loca_provincia) REFERENCES GROUP_BY_PROMOCION.Provincias(prov_codigo) ON DELETE SET NULL;
@@ -317,12 +319,11 @@ INSERT INTO GROUP_BY_PROMOCION.TiposMedioDePago (tmdp_descripcion)
     SELECT DISTINCT PAGO_TIPO_MEDIO_PAGO FROM gd_esquema.Maestra
     WHERE PAGO_TIPO_MEDIO_PAGO IS NOT NULL;
 
-/* TODO Distintos clientes/vendedores comparten el mismo mail
-INSERT INTO GROUP_BY_PROMOCION.Usuarios (usua_nombre, usua_contrasenia, usua_mail, usua_fecha_crea)
+-- Distintos clientes/vendedores comparten el mismo usuario
+INSERT INTO GROUP_BY_PROMOCION.Usuarios (usua_nombre, usua_contrasenia, usua_fecha_crea)
     SELECT DISTINCT
         CLI_USUARIO_NOMBRE nombre,
         CLI_USUARIO_PASS contrasenia,
-        CLIENTE_MAIL mail,
         CLI_USUARIO_FECHA_CREACION fecha_crea
     FROM gd_esquema.Maestra
     WHERE CLI_USUARIO_NOMBRE IS NOT NULL
@@ -330,11 +331,9 @@ INSERT INTO GROUP_BY_PROMOCION.Usuarios (usua_nombre, usua_contrasenia, usua_mai
     SELECT DISTINCT
         VEN_USUARIO_NOMBRE nombre,
         VEN_USUARIO_PASS contrasenia,
-        VENDEDOR_MAIL mail,
         VEN_USUARIO_FECHA_CREACION fecha_crea
     FROM gd_esquema.Maestra
     WHERE VEN_USUARIO_NOMBRE IS NOT NULL
-*/
 
 INSERT INTO GROUP_BY_PROMOCION.TiposEnvio (tden_descripcion)
     SELECT DISTINCT ENVIO_TIPO FROM gd_esquema.Maestra
@@ -348,15 +347,14 @@ INSERT INTO GROUP_BY_PROMOCION.SubRubros (subr_rubro, subr_descripcion)
     JOIN GROUP_BY_PROMOCION.Rubros r ON r.rubr_descripcion = m.PRODUCTO_RUBRO_DESCRIPCION
     WHERE m.PRODUCTO_RUBRO_DESCRIPCION IS NOT NULL;
 
--- TODO Productos NO ES UNICO EL CODIGO VER RESPUESTA GRUPO
-/*
+-- Productos
 INSERT INTO GROUP_BY_PROMOCION.Productos (prod_codigo, prod_sub_rubro, prod_marca, prod_modelo, prod_descripcion, prod_precio)
     SELECT DISTINCT m.PRODUCTO_CODIGO, s.subr_codigo, ma.marc_codigo, m.PRODUCTO_MOD_CODIGO, m.PRODUCTO_DESCRIPCION, m.PRODUCTO_PRECIO
     FROM gd_esquema.Maestra m
-    JOIN GROUP_BY_PROMOCION.Subrubros s ON s.subr_descripcion = m.PRODUCTO_SUB_RUBRO
+    JOIN GROUP_BY_PROMOCION.Rubros r ON r.rubr_descripcion = m.PRODUCTO_RUBRO_DESCRIPCION
+    JOIN GROUP_BY_PROMOCION.Subrubros s ON s.subr_rubro = r.rubr_codigo AND s.subr_descripcion = m.PRODUCTO_SUB_RUBRO
     JOIN GROUP_BY_PROMOCION.Marcas ma ON ma.marc_descripcion = m.PRODUCTO_MARCA
     WHERE m.PRODUCTO_CODIGO IS NOT NULL;
-*/
 
 INSERT INTO GROUP_BY_PROMOCION.Localidades (loca_provincia, loca_descripcion)
     -- Todas las localidades, unidas con sus provincias
@@ -382,30 +380,66 @@ INSERT INTO GROUP_BY_PROMOCION.Almacenes (alma_codigo, alma_localidad, alma_call
     JOIN GROUP_BY_PROMOCION.Localidades l ON l.loca_descripcion = m.ALMACEN_LOCALIDAD AND l.loca_provincia = p.prov_codigo
     WHERE m.ALMACEN_CODIGO IS NOT NULL;
 
--- TODO Vendedores
--- INSERT INTO GROUP_BY_PROMOCION.Vendedores (vend_usuario, vend_razon_social, vend_cuit)
-    SELECT DISTINCT u.usua_codigo, m.VENDEDOR_RAZON_SOCIAL, m.VENDEDOR_CUIT
+-- Vendedores
+INSERT INTO GROUP_BY_PROMOCION.Vendedores (vend_usuario, vend_razon_social, vend_mail, vend_cuit)
+    SELECT DISTINCT u.usua_codigo, m.VENDEDOR_RAZON_SOCIAL, m.VENDEDOR_MAIL, m.VENDEDOR_CUIT
     FROM gd_esquema.Maestra m
     JOIN GROUP_BY_PROMOCION.Usuarios u ON
-        u.usua_mail = m.VENDEDOR_MAIL AND
         u.usua_nombre = m.VEN_USUARIO_NOMBRE AND
-        u.usua_contrasenia = m.VEN_USUARIO_PASS
+        u.usua_contrasenia = m.VEN_USUARIO_PASS AND
+        u.usua_fecha_crea = m.VEN_USUARIO_FECHA_CREACION
     WHERE m.VENDEDOR_RAZON_SOCIAL IS NOT NULL;
 
+-- Clientes
+INSERT INTO GROUP_BY_PROMOCION.Clientes (clie_usuario, clie_nombre, clie_apellido, clie_fecha_nac, clie_mail, clie_dni)
+    SELECT DISTINCT u.usua_codigo, m.CLIENTE_NOMBRE, m.CLIENTE_APELLIDO, m.CLIENTE_FECHA_NAC, m.CLIENTE_MAIL, m.CLIENTE_DNI
+    FROM gd_esquema.Maestra m
+    JOIN GROUP_BY_PROMOCION.Usuarios u ON
+        u.usua_nombre = m.CLI_USUARIO_NOMBRE AND
+        u.usua_contrasenia = m.CLI_USUARIO_PASS AND
+        u.usua_fecha_crea = m.CLI_USUARIO_FECHA_CREACION
+    WHERE m.CLIENTE_NOMBRE IS NOT NULL;
 
--- TODO Clientes
-
--- TODO Domicilios
+-- Domicilios
+INSERT INTO GROUP_BY_PROMOCION.Domicilios (domi_usuario, domi_localidad, domi_calle, domi_nro_calle, domi_piso, domi_depto, domi_cp)
+    -- Hay que considerar los domicilios de vendedores y de clientes
+    SELECT DISTINCT 
+        u.usua_codigo,
+        l.loca_codigo,
+        m.CLI_USUARIO_DOMICILIO_CALLE,
+        m.CLI_USUARIO_DOMICILIO_NRO_CALLE,
+        m.CLI_USUARIO_DOMICILIO_PISO,
+        m.CLI_USUARIO_DOMICILIO_DEPTO,
+        m.CLI_USUARIO_DOMICILIO_CP
+    FROM gd_esquema.Maestra m
+    JOIN GROUP_BY_PROMOCION.Usuarios u ON
+        u.usua_nombre = m.CLI_USUARIO_NOMBRE AND
+        u.usua_contrasenia = m.CLI_USUARIO_PASS AND
+        u.usua_fecha_crea = m.CLI_USUARIO_FECHA_CREACION
+    JOIN GROUP_BY_PROMOCION.Provincias p ON p.prov_descripcion = m.CLI_USUARIO_DOMICILIO_PROVINCIA
+    JOIN GROUP_BY_PROMOCION.Localidades l ON l.loca_provincia = p.prov_codigo AND l.loca_descripcion = CLI_USUARIO_DOMICILIO_LOCALIDAD
+    WHERE m.CLI_USUARIO_DOMICILIO_LOCALIDAD IS NOT NULL
+    UNION
+    SELECT DISTINCT 
+        u.usua_codigo,
+        l.loca_codigo,
+        m.VEN_USUARIO_DOMICILIO_CALLE,
+        m.VEN_USUARIO_DOMICILIO_NRO_CALLE,
+        m.VEN_USUARIO_DOMICILIO_PISO,
+        m.VEN_USUARIO_DOMICILIO_DEPTO,
+        m.VEN_USUARIO_DOMICILIO_CP
+    FROM gd_esquema.Maestra m
+    JOIN GROUP_BY_PROMOCION.Usuarios u ON
+        u.usua_nombre = m.VEN_USUARIO_NOMBRE AND
+        u.usua_contrasenia = m.VEN_USUARIO_PASS AND
+        u.usua_fecha_crea = m.VEN_USUARIO_FECHA_CREACION
+    JOIN GROUP_BY_PROMOCION.Provincias p ON p.prov_descripcion = m.VEN_USUARIO_DOMICILIO_PROVINCIA
+    JOIN GROUP_BY_PROMOCION.Localidades l ON l.loca_provincia = p.prov_codigo AND l.loca_descripcion = VEN_USUARIO_DOMICILIO_LOCALIDAD
+    WHERE m.VEN_USUARIO_DOMICILIO_LOCALIDAD IS NOT NULL;
 
 -- TODO Publicaciones
 
 -- TODO Facturas
-/*INSERT INTO GROUP_BY_PROMOCION.Facturas (fact_vendedor, fact_total, fact_fecha)
-    SELECT DISTINCT u.usua_codigo, m.FACTURA_TOTAL, m.FACTURA_FECHA
-    FROM gd_esquema.Maestra m
-    JOIN GROUP_BY_PROMOCION.usuario u ON 
-    WHERE m.FACTURA_NUMERO IS NOT NULL;
-*/
 
 -- TODO DetallesFactura
 
@@ -419,22 +453,8 @@ INSERT INTO GROUP_BY_PROMOCION.MediosDePago (mpag_tipo, mpag_descripcion)
     JOIN GROUP_BY_PROMOCION.TiposMedioDePago t ON t.tmdp_descripcion = m.PAGO_TIPO_MEDIO_PAGO
     WHERE m.PAGO_MEDIO_PAGO IS NOT NULL;
 
-/*
-INSERT INTO GROUP_BY_PROMOCION.Pagos (pago_medio_de_pago, pago_importe, pago_fecha)
-    SELECT DISTINCT mp.mpag_codigo, m.PAGO_IMPORTE, m.PAGO_FECHA
-    FROM gd_esquema.Maestra m
-    JOIN GROUP_BY_PROMOCION.TiposMedioDePago tmp on tmp.tmdp_descripcion = m.PAGO_TIPO_MEDIO_PAGO 
-    JOIN GROUP_BY_PROMOCION.MediosDePago mp ON mp.mpag_descripcion = m.PAGO_MEDIO_PAGO AND mp.mpag_tipo = tmp.tmdp_codigo
-    WHERE m.PAGO_MEDIO_PAGO IS NOT NULL;
-    
+-- TODO Pagos
 
-INSERT INTO GROUP_BY_PROMOCION.DetallesPago (dpag_pago, dpag_nro_tarjeta, dpag_fecha_venc_tarjeta, dpag_cant_cuotas)
-    SELECT DISTINCT p.pago_codigo, m.PAGO_NRO_TARJETA, m.PAGO_FECHA_VENC_TARJETA, m.PAGO_CANT_CUOTAS
-    FROM gd_esquema.Maestra m
-    JOIN GROUP_BY_PROMOCION.TiposMedioDePago tmp on tmp.tmdp_descripcion = m.PAGO_TIPO_MEDIO_PAGO 
-    JOIN GROUP_BY_PROMOCION.MediosDePago mp ON mp.mpag_descripcion = m.PAGO_MEDIO_PAGO AND mp.mpag_tipo = tmp.tmdp_codigo
-    JOIN GROUP_BY_PROMOCION.Pagos p ON p.pago_
-    WHERE m.PAGO_NRO_TARJETA IS NOT NULL;
-*/
+-- TODO DetallesPago
 
 -- TODO Envios
