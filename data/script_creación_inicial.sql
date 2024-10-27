@@ -280,7 +280,7 @@ ALTER TABLE GROUP_BY_PROMOCION.Envios
     ADD FOREIGN KEY(envi_venta) REFERENCES GROUP_BY_PROMOCION.Ventas(vent_codigo) ON DELETE SET NULL,
         FOREIGN KEY(envi_tipo) REFERENCES GROUP_BY_PROMOCION.TiposEnvio(tden_codigo) ON DELETE SET NULL,
         FOREIGN KEY(envi_domicilio) REFERENCES GROUP_BY_PROMOCION.Domicilios(domi_codigo) ON DELETE SET NULL;
-
+GO
 
 /*
 ** Carga de datos
@@ -292,21 +292,25 @@ ALTER TABLE GROUP_BY_PROMOCION.Envios
 INSERT INTO GROUP_BY_PROMOCION.TiposDetalleFactura (tdfa_descripcion)
     SELECT DISTINCT FACTURA_DET_TIPO FROM gd_esquema.Maestra
     WHERE FACTURA_DET_TIPO IS NOT NULL;
+GO
 
 -- Marcas
 INSERT INTO GROUP_BY_PROMOCION.Marcas (marc_descripcion)
     SELECT DISTINCT PRODUCTO_MARCA FROM gd_esquema.Maestra
     WHERE PRODUCTO_MARCA IS NOT NULL;
+GO
 
 -- Modelos
 INSERT INTO GROUP_BY_PROMOCION.Modelos (mode_codigo, mode_descripcion)
     SELECT DISTINCT PRODUCTO_MOD_CODIGO, PRODUCTO_MOD_DESCRIPCION FROM gd_esquema.Maestra
     WHERE PRODUCTO_MOD_CODIGO IS NOT NULL;
+GO
 
 -- Rubros
 INSERT INTO GROUP_BY_PROMOCION.Rubros (rubr_descripcion)
     SELECT DISTINCT PRODUCTO_RUBRO_DESCRIPCION FROM gd_esquema.Maestra
     WHERE PRODUCTO_RUBRO_DESCRIPCION IS NOT NULL;
+GO
 
 -- Provincias
 INSERT INTO GROUP_BY_PROMOCION.Provincias (prov_descripcion)
@@ -319,11 +323,13 @@ INSERT INTO GROUP_BY_PROMOCION.Provincias (prov_descripcion)
     UNION
     SELECT DISTINCT VEN_USUARIO_DOMICILIO_PROVINCIA AS PROVINCIA FROM gd_esquema.Maestra
     WHERE VEN_USUARIO_DOMICILIO_PROVINCIA IS NOT NULL
+GO
 
 -- TiposMedioDePago
 INSERT INTO GROUP_BY_PROMOCION.TiposMedioDePago (tmdp_descripcion)
     SELECT DISTINCT PAGO_TIPO_MEDIO_PAGO FROM gd_esquema.Maestra
     WHERE PAGO_TIPO_MEDIO_PAGO IS NOT NULL;
+GO
 
 -- Usuarios
 -- Distintos clientes/vendedores comparten el mismo usuario
@@ -341,11 +347,13 @@ INSERT INTO GROUP_BY_PROMOCION.Usuarios (usua_nombre, usua_contrasenia, usua_fec
         VEN_USUARIO_FECHA_CREACION fecha_crea
     FROM gd_esquema.Maestra
     WHERE VEN_USUARIO_NOMBRE IS NOT NULL
+GO
 
 -- TiposEnvio
 INSERT INTO GROUP_BY_PROMOCION.TiposEnvio (tden_descripcion)
     SELECT DISTINCT ENVIO_TIPO FROM gd_esquema.Maestra
     WHERE ENVIO_TIPO IS NOT NULL;
+GO
 
 /* Tablas con FKs */
 
@@ -355,6 +363,7 @@ INSERT INTO GROUP_BY_PROMOCION.SubRubros (subr_rubro, subr_descripcion)
     FROM gd_esquema.Maestra m
     JOIN GROUP_BY_PROMOCION.Rubros r ON r.rubr_descripcion = m.PRODUCTO_RUBRO_DESCRIPCION
     WHERE m.PRODUCTO_RUBRO_DESCRIPCION IS NOT NULL;
+GO
 
 -- Productos
 INSERT INTO GROUP_BY_PROMOCION.Productos (prod_codigo, prod_sub_rubro, prod_marca, prod_modelo, prod_descripcion, prod_precio)
@@ -364,6 +373,7 @@ INSERT INTO GROUP_BY_PROMOCION.Productos (prod_codigo, prod_sub_rubro, prod_marc
     JOIN GROUP_BY_PROMOCION.Subrubros s ON s.subr_rubro = r.rubr_codigo AND s.subr_descripcion = m.PRODUCTO_SUB_RUBRO
     JOIN GROUP_BY_PROMOCION.Marcas ma ON ma.marc_descripcion = m.PRODUCTO_MARCA
     WHERE m.PRODUCTO_CODIGO IS NOT NULL;
+GO
 
 -- Localidades
 INSERT INTO GROUP_BY_PROMOCION.Localidades (loca_provincia, loca_descripcion)
@@ -382,6 +392,7 @@ INSERT INTO GROUP_BY_PROMOCION.Localidades (loca_provincia, loca_descripcion)
     FROM gd_esquema.Maestra m
     JOIN GROUP_BY_PROMOCION.Provincias p on p.prov_descripcion = m.VEN_USUARIO_DOMICILIO_PROVINCIA
     WHERE m.VEN_USUARIO_DOMICILIO_LOCALIDAD IS NOT NULL;
+GO
 
 -- Almacenes
 INSERT INTO GROUP_BY_PROMOCION.Almacenes (alma_codigo, alma_localidad, alma_calle, alma_nro_calle, alma_costo_dia)
@@ -390,6 +401,7 @@ INSERT INTO GROUP_BY_PROMOCION.Almacenes (alma_codigo, alma_localidad, alma_call
     JOIN GROUP_BY_PROMOCION.Provincias p ON p.prov_descripcion = m.ALMACEN_PROVINCIA
     JOIN GROUP_BY_PROMOCION.Localidades l ON l.loca_descripcion = m.ALMACEN_LOCALIDAD AND l.loca_provincia = p.prov_codigo
     WHERE m.ALMACEN_CODIGO IS NOT NULL;
+GO
 
 -- Vendedores
 INSERT INTO GROUP_BY_PROMOCION.Vendedores (vend_usuario, vend_razon_social, vend_mail, vend_cuit)
@@ -400,6 +412,7 @@ INSERT INTO GROUP_BY_PROMOCION.Vendedores (vend_usuario, vend_razon_social, vend
         u.usua_contrasenia = m.VEN_USUARIO_PASS AND
         u.usua_fecha_crea = m.VEN_USUARIO_FECHA_CREACION
     WHERE m.VENDEDOR_RAZON_SOCIAL IS NOT NULL;
+GO
 
 -- Clientes
 INSERT INTO GROUP_BY_PROMOCION.Clientes (clie_usuario, clie_nombre, clie_apellido, clie_fecha_nac, clie_mail, clie_dni)
@@ -410,6 +423,7 @@ INSERT INTO GROUP_BY_PROMOCION.Clientes (clie_usuario, clie_nombre, clie_apellid
         u.usua_contrasenia = m.CLI_USUARIO_PASS AND
         u.usua_fecha_crea = m.CLI_USUARIO_FECHA_CREACION
     WHERE m.CLIENTE_NOMBRE IS NOT NULL;
+GO
 
 -- Domicilios
 INSERT INTO GROUP_BY_PROMOCION.Domicilios (domi_usuario, domi_localidad, domi_calle, domi_nro_calle, domi_piso, domi_depto, domi_cp)
@@ -447,6 +461,7 @@ INSERT INTO GROUP_BY_PROMOCION.Domicilios (domi_usuario, domi_localidad, domi_ca
     JOIN GROUP_BY_PROMOCION.Provincias p ON p.prov_descripcion = m.VEN_USUARIO_DOMICILIO_PROVINCIA
     JOIN GROUP_BY_PROMOCION.Localidades l ON l.loca_provincia = p.prov_codigo AND l.loca_descripcion = VEN_USUARIO_DOMICILIO_LOCALIDAD
     WHERE m.VEN_USUARIO_DOMICILIO_LOCALIDAD IS NOT NULL;
+GO
 
 -- Publicaciones
 INSERT INTO GROUP_BY_PROMOCION.Publicaciones (
@@ -494,6 +509,7 @@ INSERT INTO GROUP_BY_PROMOCION.Publicaciones (
         pr.prod_descripcion = m.PRODUCTO_DESCRIPCION AND
         pr.prod_precio = m.PRODUCTO_PRECIO
     WHERE m.PUBLICACION_CODIGO IS NOT NULL;
+GO
 
 -- Facturas
 INSERT INTO GROUP_BY_PROMOCION.Facturas (fact_numero, fact_vendedor, fact_total, fact_fecha)
@@ -502,6 +518,7 @@ INSERT INTO GROUP_BY_PROMOCION.Facturas (fact_numero, fact_vendedor, fact_total,
     JOIN gd_esquema.Maestra m_vendedor ON m_vendedor.PUBLICACION_CODIGO = m.PUBLICACION_CODIGO
     JOIN GROUP_BY_PROMOCION.Vendedores v ON v.vend_cuit = m_vendedor.VENDEDOR_CUIT
     WHERE m.FACTURA_NUMERO IS NOT NULL;
+GO
 
 -- DetallesFactura
 INSERT INTO GROUP_BY_PROMOCION.DetallesFactura (dfac_publicacion, dfac_factura, dfac_tipo, dfac_cantidad, dfac_subtotal, dfac_precio)
@@ -509,6 +526,7 @@ INSERT INTO GROUP_BY_PROMOCION.DetallesFactura (dfac_publicacion, dfac_factura, 
     FROM gd_esquema.Maestra m
     JOIN GROUP_BY_PROMOCION.TiposDetalleFactura td ON td.tdfa_descripcion = m.FACTURA_DET_TIPO
     WHERE m.FACTURA_NUMERO IS NOT NULL;
+GO
 
 -- Ventas
 INSERT INTO GROUP_BY_PROMOCION.Ventas (vent_codigo, vent_cliente, vent_fecha, vent_total)
@@ -516,12 +534,14 @@ INSERT INTO GROUP_BY_PROMOCION.Ventas (vent_codigo, vent_cliente, vent_fecha, ve
     FROM gd_esquema.Maestra m
     JOIN GROUP_BY_PROMOCION.Clientes c ON c.clie_dni = m.CLIENTE_DNI AND c.clie_fecha_nac = m.CLIENTE_FECHA_NAC
     WHERE m.VENTA_CODIGO IS NOT NULL;
+GO
 
 -- DetallesVenta
 INSERT INTO GROUP_BY_PROMOCION.DetallesVenta (dven_venta, dven_publicacion, dven_precio, dven_cantidad, dven_subtotal)
     SELECT DISTINCT m.VENTA_CODIGO, m.PUBLICACION_CODIGO, m.VENTA_DET_PRECIO, m.VENTA_DET_CANT, m.VENTA_DET_SUB_TOTAL
     FROM gd_esquema.Maestra m
     WHERE m.VENTA_DET_CANT IS NOT NULL;
+GO
 
 -- MediosDePago
 INSERT INTO GROUP_BY_PROMOCION.MediosDePago (mpag_tipo, mpag_descripcion)
@@ -529,6 +549,7 @@ INSERT INTO GROUP_BY_PROMOCION.MediosDePago (mpag_tipo, mpag_descripcion)
     FROM gd_esquema.Maestra m
     JOIN GROUP_BY_PROMOCION.TiposMedioDePago t ON t.tmdp_descripcion = m.PAGO_TIPO_MEDIO_PAGO
     WHERE m.PAGO_MEDIO_PAGO IS NOT NULL;
+GO
 
 -- Pagos
 INSERT INTO GROUP_BY_PROMOCION.Pagos (pago_medio_de_pago, pago_venta, pago_importe, pago_fecha)
@@ -537,6 +558,7 @@ INSERT INTO GROUP_BY_PROMOCION.Pagos (pago_medio_de_pago, pago_venta, pago_impor
     JOIN GROUP_BY_PROMOCION.TiposMedioDePago tmp ON tmp.tmdp_descripcion = m.PAGO_TIPO_MEDIO_PAGO
     JOIN GROUP_BY_PROMOCION.MediosDePago mp ON mp.mpag_tipo = tmp.tmdp_codigo AND mp.mpag_descripcion = m.PAGO_MEDIO_PAGO
     WHERE m.PAGO_IMPORTE IS NOT NULL;
+GO
 
 -- DetallesPago
 INSERT INTO GROUP_BY_PROMOCION.DetallesPago (dpag_pago, dpag_nro_tarjeta, dpag_fecha_venc_tarjeta, dpag_cant_cuotas)
@@ -550,6 +572,7 @@ INSERT INTO GROUP_BY_PROMOCION.DetallesPago (dpag_pago, dpag_nro_tarjeta, dpag_f
         p.pago_importe = m.PAGO_IMPORTE AND
         p.pago_fecha = m.PAGO_FECHA
     WHERE m.PAGO_NRO_TARJETA IS NOT NULL;
+GO
 
 -- Envios
 INSERT INTO GROUP_BY_PROMOCION.Envios (
@@ -588,3 +611,4 @@ INSERT INTO GROUP_BY_PROMOCION.Envios (
         d.domi_depto = m.CLI_USUARIO_DOMICILIO_DEPTO AND
         d.domi_cp = m.CLI_USUARIO_DOMICILIO_CP
     WHERE m.ENVIO_COSTO IS NOT NULL;
+GO
