@@ -355,6 +355,7 @@ GO
 /*
 ** Vistas
 */
+
 -- Vista 1
 CREATE VIEW GROUP_BY_PROMOCION.BI_PromedioDeTiempoDePublicaciones (anio, cuatrimestre, subrubro_detalle, rubro_detalle, horas_vigente_promedio)
 AS
@@ -428,7 +429,8 @@ AS
 GO
 
 /* Se usaria:
-SELECT TOP 3 localidad, localidad_detalle, monto_vendido FROM GROUP_BY_PROMOCION.BI_PagoEnCuotas WHERE tipo_medio_de_pago='Tarjeta Debito' AND anio=2025 AND mes=1
+SELECT TOP 5 rubro, rubro_detalle, monto_vendido FROM GROUP_BY_PROMOCION.BI_RendimientoDeRubros 
+WHERE localidad=1 AND anio=2025 AND cuatrimestre=1 AND edad_minima=0 AND edad_maxima=25
 ORDER BY monto_vendido DESC
 GO
 */
